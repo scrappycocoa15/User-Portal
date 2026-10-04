@@ -294,7 +294,7 @@ AUD_LABEL = {"All": "All Users", "Leaders": "Leaders Only", "Reps": "Reps Only"}
 
 # ── Subtitle ───────────────────────────────────────────────────────────────────
 st.markdown(
-    "<p style='color:#4A4A4A;font-size:0.88rem;margin:0 0 1.4rem 0;'>"
+    "<p style='color:#4A4A4A;font-size:0.88rem;margin:2rem 0 1.4rem 0;'>"
     "All your Salesforce-connected tools in one place. "
     "Click <strong>Open app</strong> on any card to launch in a new tab.</p>",
     unsafe_allow_html=True)
