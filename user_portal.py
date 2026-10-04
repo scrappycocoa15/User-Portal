@@ -1,18 +1,21 @@
 """
 user_portal.py — US SMB Sales Tools Portal
 """
-import base64, cairosvg, io
+import base64, io
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageDraw
 
-# ── SAP logo as proper PNG favicon ──────────────────────────────────────────
-_SVG = base64.b64decode("PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI4LjMuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCA0MTIuNCAyMDQiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDQxMi40IDIwNDsiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPgoJLnN0MHtmaWxsLXJ1bGU6ZXZlbm9kZDtjbGlwLXJ1bGU6ZXZlbm9kZDtmaWxsOnVybCgjU1ZHSURfMV8pO30KCS5zdDF7ZmlsbC1ydWxlOmV2ZW5vZGQ7Y2xpcC1ydWxlOmV2ZW5vZGQ7ZmlsbDojRkZGRkZGO30KPC9zdHlsZT4KPGc+CgkKCQk8bGluZWFyR3JhZGllbnQgaWQ9IlNWR0lEXzFfIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjIwNi4xOSIgeTE9IjIwNiIgeDI9IjIwNi4xOSIgeTI9IjIiIGdyYWRpZW50VHJhbnNmb3JtPSJtYXRyaXgoMSAwIDAgLTEgMCAyMDYpIj4KCQk8c3RvcCAgb2Zmc2V0PSIwIiBzdHlsZT0ic3RvcC1jb2xvcjojMDBCOEYxIi8+CgkJPHN0b3AgIG9mZnNldD0iMi4wMDAwMDBlLTAyIiBzdHlsZT0ic3RvcC1jb2xvcjojMDFCNkYwIi8+CgkJPHN0b3AgIG9mZnNldD0iMC4zMSIgc3R5bGU9InN0b3AtY29sb3I6IzBEOTBEOSIvPgoJCTxzdG9wICBvZmZzZXQ9IjAuNTgiIHN0eWxlPSJzdG9wLWNvbG9yOiMxNzc1QzgiLz4KCQk8c3RvcCAgb2Zmc2V0PSIwLjgyIiBzdHlsZT0ic3RvcC1jb2xvcjojMUM2NUJGIi8+CgkJPHN0b3AgIG9mZnNldD0iMSIgc3R5bGU9InN0b3AtY29sb3I6IzFFNUZCQiIvPgoJPC9saW5lYXJHcmFkaWVudD4KCTxwb2x5bGluZSBjbGFzcz0ic3QwIiBwb2ludHM9IjAsMjA0IDIwOC40LDIwNCA0MTIuNCwwIDAsMCAwLDIwNCAJIi8+Cgk8cGF0aCBjbGFzcz0ic3QxIiBkPSJNMjQ0LjcsMzguNGgtNDAuNnY5Ni41bC0zNS41LTk2LjZoLTM1LjJsLTMwLjMsODAuN0MxMDAsOTguNyw3OSw5MS43LDYyLjQsODYuNEM1MS41LDgyLjksMzkuOCw3Ny43LDQwLDcyCgkJYzAuMS00LjcsNi4yLTksMTguNC04LjRjOC4yLDAuNCwxNS40LDEuMSwyOS43LDhsMTQuMS0yNC41Yy0xMy4xLTYuNi0zMS4yLTEwLjktNDYtMTAuOWgtMC4xYy0xNy4zLDAtMzEuNyw1LjYtNDAuNiwxNC44CgkJYy02LjIsNi4zLTkuNywxNC44LTkuNywyMy43QzUuNSw4Ny4yLDEwLjEsOTYsMTkuNywxMDNjOC4xLDUuOSwxOC41LDkuOCwyNy42LDEyLjZjMTEuMywzLjUsMjAuNSw2LjUsMjAuNCwxMwoJCWMtMC4xLDIuNC0xLDQuNy0yLjcsNi40Yy0yLjgsMi45LTcuMSw0LTEzLjEsNC4xYy0xMS41LDAuMi0yMC0xLjYtMzMuNi05LjZMNS44LDE1NC40YzE0LDgsMjkuOSwxMi4yLDQ2LDEyLjJoMi4xCgkJYzE0LjItMC4yLDI1LjctNC4zLDM0LjktMTEuN2MwLjUtMC40LDEtMC44LDEuNS0xLjNsLTQuMSwxMC45SDEyM2w2LjItMTguOGM3LDIuMywxNC4zLDMuNSwyMS43LDMuNGM3LjIsMCwxNC4zLTEuMSwyMS4yLTMuMgoJCWw2LDE4LjZoNjAuMXYtMzloMTMuMWMzMS43LDAsNTAuNS0xNi4yLDUwLjUtNDMuMkMzMDEuNyw1Mi4yLDI4My41LDM4LjQsMjQ0LjcsMzguNHogTTE1MC45LDEyMWMtNC40LDAtOC44LTAuNy0xMy0yLjNsMTIuOS00MC42CgkJaDAuMmwxMi42LDQwLjdDMTU5LjYsMTIwLjMsMTU1LjIsMTIxLDE1MC45LDEyMXogTTI0Ny4xLDk3LjdoLTguOVY2NC45aDguOWMxMS45LDAsMjEuNCw0LDIxLjQsMTYuMQoJCUMyNjguNSw5My43LDI1OSw5Ny42LDI0Ny4xLDk3LjciLz4KPC9nPgo8L3N2Zz4K")
-_png = cairosvg.svg2png(bytestring=_SVG, output_width=128, output_height=64)
-_favicon = Image.open(io.BytesIO(_png))
+# ── Favicon: SAP-blue square (no cairosvg needed — PIL only) ─────────────────
+def _make_favicon():
+    img = Image.new("RGBA", (64, 64), (0, 42, 134, 255))   # SAP Dark Navy #002A86
+    d   = ImageDraw.Draw(img)
+    # White diagonal stripe — subtle nod to SAP anvil shape
+    d.polygon([(32, 0), (64, 0), (64, 20)], fill=(255, 255, 255, 60))
+    return img
 
 st.set_page_config(
     page_title="US SMB Sales Tools",
-    page_icon=_favicon,
+    page_icon=_make_favicon(),
     layout="wide",
 )
 
